@@ -46,7 +46,10 @@ public struct APIConfig{
 public protocol Networking{
     var config: APIConfig { get }
     @available(iOS 13.0.0, *)
-    func execute<T: Decodable, B: Encodable>(_ endPoint: EndPoint, body: B?) async throws -> T
+    func execute<T: Decodable>(_ endPoint: EndPoint) async throws -> T
+    
+    @available(iOS 13.0.0, *)
+    func execute<T: Decodable, B: Encodable>(_ endPoint: EndPoint, body: B) async throws -> T
 }
 
 public enum ApiError: Error{
@@ -70,15 +73,24 @@ public final class NetworkClient: Networking{
         return URL(string: config.baseUrl)
     }
     
-    public  func execute<T: Decodable, B: Encodable>(_ endPoint: EndPoint, body: B? = nil) async throws -> T{
+    public  func execute<T: Decodable>(_ endPoint: EndPoint) async throws -> T{
+        try await execute(endPoint, bodyData: nil)
+    }
+    
+    public  func execute<T: Decodable, B: Encodable>(_ endPoint: EndPoint, body: B) async throws -> T{
+        let httpBody = try? JSONEncoder().encode(body)
+        return try await execute(endPoint, bodyData: httpBody)
+    }
+    
+    private  func execute<T: Decodable>(_ endPoint: EndPoint, bodyData: Data?) async throws -> T{
         guard let url = baseUrl?.appendingPathComponent(endPoint.path) else{
             throw ApiError.badUrl
         }
         var urlRequest = URLRequest(url: url)
         
         urlRequest.httpMethod = endPoint.httpMethod.rawValue
-        if let body = body, let httpBody = try? JSONEncoder().encode(body){
-            urlRequest.httpBody = httpBody
+        if let body = bodyData{
+            urlRequest.httpBody = body
         }
         urlRequest.allHTTPHeaderFields = endPoint.headers
         
