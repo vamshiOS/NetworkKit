@@ -3,7 +3,7 @@
 
 import Foundation
 
-typealias Headers = [String: String]
+public typealias Headers = [String: String]
 
 public enum HTTPMethod: String{
     case get = "GET",
@@ -13,9 +13,15 @@ public enum HTTPMethod: String{
 }
 
 public struct EndPoint{
-    let path: String
-    let httpMethod: HTTPMethod
-    let additionalHeaders: Headers?
+    public let path: String
+    public let httpMethod: HTTPMethod
+    public let additionalHeaders: Headers?
+    
+    public init(path: String, httpMethod: HTTPMethod, additionalHeaders: Headers?) {
+        self.path = path
+        self.httpMethod = httpMethod
+        self.additionalHeaders = additionalHeaders
+    }
 }
 
 extension EndPoint{
